@@ -1,6 +1,4 @@
-This project provides an automated way to set up an Amazon Elastic Kubernetes Service (EKS) cluster using Terraform. It simplifies the process of provisioning and configuring the necessary resources required to run a scalable and highly available Kubernetes cluster on AWS.
-
-The infrastructure is defined as code using Terraform, allowing for version-controlled and repeatable deployments. By following the steps outlined in this project, you will have a fully functional EKS cluster up and running in no time.
+This project is a modular Terraform infrastructure setup designed to provision and manage an EKS (Elastic Kubernetes Service) cluster with associated VPC (Virtual Private Cloud) and EFS (Elastic File System) resources. The structure follows a modular approach, with reusable components organized into separate directories.
 
 ### Prerequisites
 Before you begin, ensure that you have the following prerequisites in place:
@@ -94,21 +92,55 @@ Follow these steps to set up the EKS cluster using Terraform:
    ```
 
 
-*The configuration of the EKS cluster can be customized to suit your specific requirements. The main configuration file is located in the project directory and named `terraform.tfvars`. Open this file to modify the following parameters:
+### Variables Explanation
 
-- `name`: The name of the EKS cluster and its needed AWS resources
+Below is a detailed explanation of the variables required for this project:
 
-- `instance_types`: The EC2 instances type for the worker nodes
+| Variable Name      | Type                        | Default Value                  | Description                                                                                   |
+|--------------------|-----------------------------|--------------------------------|-----------------------------------------------------------------------------------------------|
+| `region`           | `string`                   | `"eu-central-1"`               | The AWS region where the infrastructure will be provisioned.                                 |
+| `name`             | `string`                   | `"anaoum"`                     | A project-specific name used for tagging and identification of resources.                    |
+| `customer`         | `string`                   | `"fys"`                        | A customer-specific identifier used for tagging and resource organization.                   |
+| `public_cidrs`     | `list(string)`             | `["10.0.100.0/24", "10.0.101.0/24"]` | The CIDR blocks for the public subnets within the VPC.                                       |
+| `private_cidrs`    | `list(string)`             | `["10.0.102.0/24", "10.0.103.0/24"]` | The CIDR blocks for the private subnets within the VPC.                                      |
+| `vpc_id`           | `string`                   | `"vpc-xxx"`                    | The ID of the VPC where the resources will be created.                                       |
+| `private_rtb_id`   | `string`                   | `"rtb-yyy"`                    | The ID of the private route table associated with the private subnets.                      |
+| `public_rtb_id`    | `string`                   | `"rtb-zzz"`                    | The ID of the public route table associated with the public subnets.                        |
+| `node_groups`      | `list(object)`             | (See Below)                    | Configuration for EKS node groups, including instance types, disk size, and scaling limits. |
 
-- `scaling_config_desired_size`: The desired number of the worker nodes
+#### Default Value for `node_groups`
+The `node_groups` variable is a list of objects that define the configuration for EKS worker node groups. Each object includes the following fields:
+- `instance_types`: A list of instance types (e.g., `["t3.medium"]`) to be used in the node group.
+- `disk_size`: The size of the disk (in GB) for each instance.
+- `desired_size`: The desired number of instances in the node group.
+- `max_size`: The maximum number of instances the node group can scale up to.
+- `min_size`: The minimum number of instances in the node group.
 
-- `scaling_config_min_size`: The minimum number for the worker nodes based on the autoscaling
-
-- `scaling_config_max_size`: The maximum number for the worker nodes based on the autoscaling
+#### Default Node Group Configuration:
+```hcl
+[
+  {
+    instance_types = ["t3.medium"]
+    disk_size      = 20
+    desired_size   = 2
+    max_size       = 5
+    min_size       = 1
+  },
+  {
+    instance_types = ["t3.large"]
+    disk_size      = 30
+    desired_size   = 1
+    max_size       = 3
+    min_size       = 1
+  }
+]
+```
 
 Then execute the plan command using the file: `terraform plan -var-file=terraform.tfvars`
 
 Feel free to adjust these parameters and re-run the `terraform apply` command to update your cluster.
+
+
 
 ### Post-Installation
 
